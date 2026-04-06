@@ -1,0 +1,26 @@
+[project]
+name = "fcm-quadrature"
+version = "0.1.0"
+description = "FCM quadrature weight prediction using neural networks"
+requires-python = ">=3.10"
+dependencies = [
+    "tensorflow>=2.10.0,<2.16.0",
+    "numpy>=1.21.0,<2.0.0",
+    "pandas>=1.3.0",
+    "dask>=2021.0.0",
+    "pyarrow",
+    "matplotlib>=3.4.0",
+    "seaborn>=0.11.0",
+    "scipy",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+tracking = ["mlflow"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.setuptools.packages.find]
+include = ["fcm_quadrature*"]

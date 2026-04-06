@@ -1,0 +1,85 @@
+======================================================================
+BEST MODEL DETAILED REPORT
+======================================================================
+
+Model: FNN_w512_d4_lr1e-05_b8192_do0.1
+Validation Loss: 7.955682e-05
+Parameters: 796,701
+Best Epoch: 2447
+Early Stopped: True
+
+--- Configuration ---
+  model_width: 512
+  model_depth: 4
+  learning_rate: 1e-05
+  batch_size_train: 8192
+  dropout_rate: 0.1
+  model_name: FNN_w512_d4_lr1e-05_b8192_do0.1
+  batch_size_valid: 65536
+  num_epochs: 10000
+  early_stopping_patience: 300
+  weight_initializer: glorot_uniform
+  activation: relu
+  loss_type: combined
+  num_outputs: 4
+  use_normalization: True
+
+--- Per-Weight Metrics ---
+
+  w1:
+    Mean Abs Error     : 1.702891e-03
+    Median Abs Error   : 1.083724e-03
+    Max Abs Error      : 2.127552e-02
+    Std Error          : 2.740935e-03
+    Mean % Error       : 51.4652%
+    Median % Error     : 0.3772%
+    95th %ile % Error  : 106.8431%
+    99th %ile % Error  : 967.8876%
+    R²                 : 0.99996400
+
+  w2:
+    Mean Abs Error     : 2.032260e-03
+    Median Abs Error   : 1.191964e-03
+    Max Abs Error      : 2.538803e-02
+    Std Error          : 3.242466e-03
+    Mean % Error       : 116.8954%
+    Median % Error     : 0.4797%
+    95th %ile % Error  : 144.4907%
+    99th %ile % Error  : 1887.2502%
+    R²                 : 0.99994951
+
+  w3:
+    Mean Abs Error     : 1.869879e-03
+    Median Abs Error   : 1.175046e-03
+    Max Abs Error      : 2.295351e-02
+    Std Error          : 2.988654e-03
+    Mean % Error       : 91.9985%
+    Median % Error     : 0.4336%
+    95th %ile % Error  : 92.7973%
+    99th %ile % Error  : 1372.4207%
+    R²                 : 0.99995720
+
+  w4:
+    Mean Abs Error     : 1.970751e-03
+    Median Abs Error   : 1.115203e-03
+    Max Abs Error      : 2.436239e-02
+    Std Error          : 3.357724e-03
+    Mean % Error       : 61.2622%
+    Median % Error     : 0.4159%
+    95th %ile % Error  : 124.7244%
+    99th %ile % Error  : 1010.5930%
+    R²                 : 0.99994487
+
+--- Area Fraction Verification ---
+  (area_fraction = sum(w1,w2,w3,w4) / 4)
+    Mean Abs Error        : 1.152744e-03
+    Median Abs Error      : 6.561279e-04
+    Max Abs Error         : 9.903997e-03
+    Mean % Error          : 82.2866%
+    Median % Error        : 0.1793%
+    95th percentile % Err : 66.9741%
+    99th percentile % Err : 2218.1572%
+    % samples < 1% error  : 68.74%
+    % samples < 5% error  : 83.19%
+    % samples < 10% error : 87.22%
+    R² (area fraction)    : 0.99997747

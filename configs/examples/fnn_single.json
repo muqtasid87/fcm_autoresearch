@@ -1,0 +1,63 @@
+[{
+    "model_width": 512,
+    "model_depth": 4,
+    "learning_rate": 1e-05,
+    "batch_size_train": 8192,
+    "dropout_rate": 0.1,
+    "model_name": "FNN_w512_d4_lr1e-05_b8192_do0.1",
+    "batch_size_valid": 65536,
+    "num_epochs": 10000,
+    "early_stopping_patience": 9999900,
+    "weight_initializer": "glorot_uniform",
+    "activation": "relu",
+    "loss_type": "combined",
+    "num_outputs": 4,
+    "use_normalization": true
+},
+
+{
+    "model_width": 128,
+    "model_depth": 3,
+    "learning_rate": 0.0001,
+    "batch_size_train": 16384,
+    "batch_size_valid": 65536,
+    "num_epochs": 10000,
+    "weight_initializer": "glorot_uniform",
+    "activation": "relu",
+    "loss_type": "mse",
+    "num_outputs": 4,
+    "model_name": "model_016_w128_d3_lr1e-04_bs16384_relu"
+},
+
+{
+    "batch_size_valid": 65536,
+    "num_epochs": 10000,
+    "weight_initializer": "glorot_uniform",
+    "loss_type": "mse",
+    "num_outputs": 4,
+    "num_inputs": 12,
+    "early_stopping_patience": 500000,
+    "model_width": 256,
+    "model_depth": 5,
+    "learning_rate": 0.0001,
+    "batch_size_train": 32768,
+    "activation": "gelu",
+    "model_name": "model_09_w256_d5_lr1e-04_bs32768_gelu"
+},
+
+{
+    "batch_size_valid": 65536,
+    "num_epochs": 10000,
+    "weight_initializer": "he_normal",
+    "loss_type": "mse",
+    "num_outputs": 4,
+    "model_width": 256,
+    "model_depth": 5,
+    "learning_rate": 0.001,
+    "batch_size_train": 16384,
+    "activation": "relu",
+    "model_name": "model_052_w256_d5_lr1e-03_bs16384_relu"
+}
+
+
+]

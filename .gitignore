@@ -1,0 +1,42 @@
+# Data and results (synced via rsync, not git)
+data/
+experiments/
+mlruns/
+Data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Config with secrets
+sync.conf
+
+# Runtime artifacts
+*.Project
+log.txt
+temp/
+
+# IDE / tool
+.claude/
+.vscode/
+
+# Old source dirs (kept for reference, not tracked)
+NNTrain/
+src_moment_fitting/
+runs/
+gui.py
+.archive_scripts/
+.self_code_sanity_check/
+.ipynb_checkpoints/
+
+# Binary / large files
+*.h5
+*.npy
+*.pickle
+*.keras
+*.csv
+*.png
+*.jpg
+*.ipynb

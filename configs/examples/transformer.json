@@ -1,0 +1,17 @@
+{
+    "valid_data": "Data/Valid_1M_NoVertices.csv",
+    "d_model": 256,
+    "num_heads": 8,
+    "num_layers": 6,
+    "d_ff": null,
+    "dropout_rate": 0.15,
+    "use_normalization": true,
+    "batch_size": 4096,
+    "learning_rate": 1e-4,
+    "num_epochs": 1000,
+    "early_stopping_patience": 0,
+    "loss_type": "combined",
+    "loss_alpha": 1.0,
+    "loss_beta": 1.0,
+    "output_dir": null
+}
