@@ -38,7 +38,7 @@ echo "============================================================"
 # ── 2. Generate data ───────────────────────────────────────────────────────────
 HALF_SAMPLES=$(( NUM_SAMPLES / 2 ))
 
-# Generate line cuts
+# Generate line cuts (parallel workers for speed)
 echo ""
 echo "Generating LINE cuts (${HALF_SAMPLES} samples)..."
 LINE_OUTPUT=$(python3 scripts/generate_data.py \
@@ -48,12 +48,13 @@ LINE_OUTPUT=$(python3 scripts/generate_data.py \
     --num-samples "$HALF_SAMPLES" \
     --project-name "$DATA_DIR/trial_line" \
     --dataset-name "fcm_auto_line" \
+    --workers 16 \
     $([ "$INCLUDE_ARC" = "true" ] && echo "--include-arc-features") \
     2>&1)
 echo "$LINE_OUTPUT"
 LINE_CSV=$(echo "$LINE_OUTPUT" | grep "Output:" | tail -1 | awk '{print $2}')
 
-# Generate arc cuts
+# Generate arc cuts (parallel workers for speed)
 echo ""
 echo "Generating ARC cuts (${HALF_SAMPLES} samples)..."
 ARC_OUTPUT=$(python3 scripts/generate_data.py \
@@ -63,6 +64,7 @@ ARC_OUTPUT=$(python3 scripts/generate_data.py \
     --num-samples "$HALF_SAMPLES" \
     --project-name "$DATA_DIR/trial_arc" \
     --dataset-name "fcm_auto_arc" \
+    --workers 16 \
     $([ "$INCLUDE_ARC" = "true" ] && echo "--include-arc-features") \
     2>&1)
 echo "$ARC_OUTPUT"
@@ -127,8 +129,7 @@ python3 scripts/train.py "$TRAIN_CONFIG" \
     --train-data "$TRAIN_CSV" \
     --valid-data "$VALID_CSV" \
     --output-dir "$TRIAL_DIR" \
-    --num-gpus 1 \
-    --cpu-only \
+    --auto \
     --mlflow-experiment fcm_autoresearch
 
 # ── 6. Extract metric ──────────────────────────────────────────────────────────
