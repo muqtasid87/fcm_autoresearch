@@ -1,0 +1,26 @@
+{
+    "sweep_type": "optuna",
+    "n_trials": 50,
+    "seed": 42,
+    "optuna_sampler": "tpe",
+    "base_config": {
+        "num_epochs": 3000,
+        "batch_size_train": 8192,
+        "batch_size_valid": 65536,
+        "loss_type": "combined",
+        "loss_alpha": 1.0,
+        "loss_beta": 0.5,
+        "early_stopping_patience": 500,
+        "num_inputs": 12,
+        "num_outputs": 4,
+        "seed": 42,
+        "mlflow_experiment_name": "optuna_sweep"
+    },
+    "param_space": {
+        "model_width": {"type": "int_uniform", "low": 64, "high": 1024},
+        "model_depth": {"type": "int_uniform", "low": 2, "high": 8},
+        "learning_rate": {"type": "log_uniform", "low": 1e-5, "high": 1e-2},
+        "activation": ["relu", "gelu", "swish", "tanh"],
+        "dropout_rate": {"type": "uniform", "low": 0.0, "high": 0.3}
+    }
+}

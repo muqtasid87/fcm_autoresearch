@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import dataclass, field, asdict
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 
 
 @dataclass
@@ -40,11 +40,39 @@ class ExperimentConfig:
     train_data: str = 'data/processed/train.csv'
     valid_data: str = 'data/processed/valid.csv'
 
+    # Input/output dimensions
+    num_inputs: int = 12
+    num_outputs: int = 4
+
+    # Data generation
+    cut_type: Literal['line', 'arc', 'both'] = 'line'
+    num_samples_start_edge: int = 15
+    num_samples_end_edge: int = 15
+    use_all_edges_as_start: bool = False
+    arc_min_radius: float = 0.5
+    arc_max_radius: float = 10.0
+    arc_num_radius: int = 10
+    include_arc_features: bool = False  # append radius/direction to input
+
+    # Target point configuration (controls num_inputs)
+    target_types: List[str] = field(
+        default_factory=lambda: ['cell vertices', '2 points at given ratio']
+    )
+    target_ratio: List[float] = field(default_factory=lambda: [1e-3])
+
+    # Reproducibility
+    seed: int = 42
+
     # Output
     model_name: Optional[str] = None
-    num_outputs: int = 4
     output_dir: Optional[str] = None
     gradient_clip_norm: float = 1.0
+
+    # MLflow
+    mlflow_experiment_name: Optional[str] = None
+
+    # Sweep (optional, for sweep mode)
+    sweep: Optional[dict] = None
 
 
 def load_config(path: str) -> ExperimentConfig:
@@ -61,6 +89,23 @@ def load_config(path: str) -> ExperimentConfig:
     filtered = {k: v for k, v in data.items() if k in known_fields}
 
     return ExperimentConfig(**filtered)
+
+
+def load_configs(path: str) -> list:
+    """Load all configs from a JSON file (single or list)."""
+    with open(path, 'r') as f:
+        data = json.load(f)
+
+    if isinstance(data, dict):
+        data = [data]
+
+    known_fields = {f.name for f in ExperimentConfig.__dataclass_fields__.values()}
+    configs = []
+    for item in data:
+        filtered = {k: v for k, v in item.items() if k in known_fields}
+        configs.append(ExperimentConfig(**filtered))
+
+    return configs
 
 
 def save_config(config: ExperimentConfig, path: str):

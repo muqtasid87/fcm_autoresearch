@@ -1,41 +1,34 @@
 #!/usr/bin/env python
 """
-Generic training script for neural networks.
+Training script for FCM quadrature neural networks.
 
-Supports training a single model or many models in parallel from a JSON config.
+Supports:
+  - Single model training
+  - Parallel multi-model training (round-robin across GPUs)
+  - Structured sweeps (grid, random, Optuna/Bayesian)
+  - Auto hardware detection
 
 Usage:
-    # Generate a template config (single model)
-    python train.py --template > my_config.json
-
-    # Generate a template with multiple models
-    python train.py --template --count 3 > my_configs.json
+    # Generate a template config
+    python scripts/train.py --template > my_config.json
 
     # Train a single model
-    python train.py my_config.json
+    python scripts/train.py my_config.json --train-data data/train.csv --valid-data data/valid.csv
 
     # Train multiple models in parallel on GPUs
-    python train.py my_configs.json --num-gpus 8
+    python scripts/train.py configs.json --num-gpus 8
 
-    # Train multiple models on CPU only
-    python train.py configs.json --threads-per-job 3 --max-parallel 10
+    # Grid/random sweep
+    python scripts/train.py --sweep sweep_config.json --train-data data/train.csv --valid-data data/valid.csv
 
-    # Preview what would run without training
-    python train.py my_configs.json --dry-run
+    # Optuna Bayesian optimization
+    python scripts/train.py --sweep optuna_config.json --train-data data/train.csv --valid-data data/valid.csv
 
-Config format (single model):
-    {
-        "model_width": 256,
-        "model_depth": 4,
-        "learning_rate": 1e-3,
-        ...
-    }
+    # Auto-detect hardware
+    python scripts/train.py configs.json --auto
 
-Config format (multiple models):
-    [
-        {"model_width": 256, "model_depth": 4, ...},
-        {"model_width": 512, "model_depth": 6, ...}
-    ]
+    # Preview without training
+    python scripts/train.py my_configs.json --dry-run
 """
 
 import os
@@ -54,13 +47,15 @@ DEFAULTS = {
     'batch_size_valid': 2**16,       # 65536
     'num_epochs': 5000,
     'early_stopping_patience': 500,
-    'loss_type': 'combined',              # 'mse', 'moment', or 'combined'
-    'loss_alpha': 1.0,               # weight for MSE in combined loss
-    'loss_beta': 0.5,                # weight for moment in combined loss
-    'dropout_rate': 0.0,             # 0.0 = no dropout
+    'loss_type': 'combined',
+    'loss_alpha': 1.0,
+    'loss_beta': 0.5,
+    'dropout_rate': 0.0,
+    'num_inputs': 12,
     'num_outputs': 4,
     'use_normalization': False,
     'gradient_clip_norm': 1.0,
+    'seed': 42,
 }
 
 
@@ -81,9 +76,11 @@ def generate_template(count=1):
         'loss_alpha': 1.0,
         'loss_beta': 0.5,
         'dropout_rate': 0.0,
+        'num_inputs': 12,
         'num_outputs': 4,
         'use_normalization': True,
         'gradient_clip_norm': 1.0,
+        'seed': 42,
     }
 
     if count == 1:
@@ -117,7 +114,6 @@ def make_model_name(config, index=None):
 def fill_defaults(config):
     """Fill in default values for any missing keys."""
     filled = dict(DEFAULTS)
-    # Remove non-hyperparameter keys
     for key, value in config.items():
         if key.startswith('_'):
             continue
@@ -142,7 +138,7 @@ def train_single(config, train_data, valid_data, output_dir):
 
     results = train_model(
         config, data_paths, model_output_dir,
-        gpu_id=None,  # use whatever GPU is visible
+        gpu_id=None,
         num_threads=4,
     )
 
@@ -158,7 +154,8 @@ def train_single(config, train_data, valid_data, output_dir):
 
 
 def train_parallel(configs, train_data, valid_data, output_dir,
-                   num_gpus=8, max_parallel=None, threads_per_job=3, cpu_only=False):
+                   num_gpus=8, max_parallel=None, threads_per_job=3,
+                   cpu_only=False, mlflow_experiment=None):
     """Train multiple models in parallel using the orchestrator."""
     import multiprocessing as mp
     mp.set_start_method('spawn', force=True)
@@ -187,9 +184,68 @@ def train_parallel(configs, train_data, valid_data, output_dir,
         max_parallel=max_parallel,
         threads_per_job=threads_per_job,
         cpu_only=cpu_only,
+        mlflow_experiment_name=mlflow_experiment,
     )
 
     return search.run(full_configs, data_paths)
+
+
+def run_sweep(sweep_path, train_data, valid_data, output_dir,
+              num_gpus=8, max_parallel=None, threads_per_job=3,
+              cpu_only=False):
+    """Run a structured hyperparameter sweep."""
+    from fcm_quadrature.training.sweeps import load_sweep, generate_configs, run_optuna_sweep
+
+    sweep = load_sweep(sweep_path)
+    print(f"Loaded {sweep.sweep_type} sweep from {sweep_path}")
+
+    data_paths = {
+        'train': os.path.abspath(train_data),
+        'valid': os.path.abspath(valid_data),
+    }
+
+    if sweep.sweep_type in ('grid', 'random'):
+        configs = generate_configs(sweep)
+        print(f"Generated {len(configs)} configurations")
+
+        if not configs:
+            print("ERROR: No configurations generated from sweep")
+            sys.exit(1)
+
+        # Merge base_config defaults
+        final_configs = []
+        for c in configs:
+            merged = dict(DEFAULTS)
+            merged.update(sweep.base_config)
+            merged.update(c)
+            final_configs.append(merged)
+
+        # Dry run preview
+        print(f"\nSweep preview ({sweep.sweep_type}):")
+        for key in sweep.param_space:
+            vals = sorted(set(str(c.get(key, '?')) for c in final_configs))
+            if len(vals) <= 10:
+                print(f"  {key}: {', '.join(vals)}")
+            else:
+                print(f"  {key}: {len(vals)} unique values")
+        print()
+
+        train_parallel(
+            final_configs, train_data, valid_data, output_dir,
+            num_gpus=num_gpus,
+            max_parallel=max_parallel,
+            threads_per_job=threads_per_job,
+            cpu_only=cpu_only,
+            mlflow_experiment=sweep.base_config.get('mlflow_experiment_name'),
+        )
+
+    elif sweep.sweep_type == 'optuna':
+        gpu_ids = list(range(num_gpus)) if not cpu_only else None
+        run_optuna_sweep(
+            sweep, data_paths, output_dir,
+            gpu_ids=gpu_ids,
+            num_threads=threads_per_job,
+        )
 
 
 def dry_run(configs, cpu_only=False, num_gpus=8):
@@ -212,7 +268,6 @@ def dry_run(configs, cpu_only=False, num_gpus=8):
               f"act={config['activation']}, loss={config['loss_type']}, "
               f"dropout={config['dropout_rate']}")
 
-    # Summary of unique values
     filled_configs = [fill_defaults(c) for c in configs]
     print(f"\nHyperparameter ranges:")
     for key in ['model_width', 'model_depth', 'learning_rate', 'batch_size_train',
@@ -223,27 +278,23 @@ def dry_run(configs, cpu_only=False, num_gpus=8):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Train neural networks from a JSON config file',
+        description='Train FCM quadrature neural networks',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python train.py --template > config.json        # generate template
-  python train.py config.json                      # train 1 model
-  python train.py configs.json --num-gpus 8        # train many on GPUs
-  python train.py configs.json --cpu-only          # train many on CPU
-  python train.py configs.json --dry-run           # preview only
-
-Supported hyperparameters in the config:
-  model_width, model_depth, activation, weight_initializer,
-  learning_rate, batch_size_train, batch_size_valid,
-  num_epochs, early_stopping_patience,
-  loss_type (mse/moment/combined), loss_alpha, loss_beta,
-  dropout_rate, num_outputs, use_normalization, gradient_clip_norm
+  python scripts/train.py --template > config.json
+  python scripts/train.py config.json --train-data data/train.csv --valid-data data/valid.csv
+  python scripts/train.py configs.json --num-gpus 8
+  python scripts/train.py --sweep sweep.json --train-data data/train.csv --valid-data data/valid.csv
+  python scripts/train.py configs.json --auto
+  python scripts/train.py configs.json --dry-run
         """
     )
 
     parser.add_argument('config', nargs='?', type=str,
-                        help='Path to JSON config file')
+                        help='Path to JSON config file (model configs or list)')
+    parser.add_argument('--sweep', type=str, default=None,
+                        help='Path to sweep config JSON (grid/random/optuna)')
     parser.add_argument('--template', action='store_true',
                         help='Print a template config and exit')
     parser.add_argument('--count', type=int, default=1,
@@ -254,18 +305,24 @@ Supported hyperparameters in the config:
     parser.add_argument('--valid-data', type=str,
                         default='Data/Valid_1M_NoVertices.csv',
                         help='Path to validation CSV')
-    parser.add_argument('--output-dir', type=str, default='output',
-                        help='Base output directory')
-    parser.add_argument('--num-gpus', type=int, default=8,
-                        help='Number of GPUs for parallel training')
+    parser.add_argument('--output-dir', type=str, default='experiments',
+                        help='Base output directory (default: experiments)')
+    parser.add_argument('--num-gpus', type=str, default='8',
+                        help='Number of GPUs (integer or "auto")')
     parser.add_argument('--max-parallel', type=int, default=None,
                         help='Max concurrent jobs (default: number of models)')
     parser.add_argument('--threads-per-job', type=int, default=3,
                         help='CPU threads per job')
     parser.add_argument('--cpu-only', action='store_true',
                         help='Train on CPU only')
+    parser.add_argument('--auto', action='store_true',
+                        help='Auto-detect hardware and configure GPUs/threads')
     parser.add_argument('--dry-run', action='store_true',
                         help='Preview configurations without training')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='Override seed for all configs')
+    parser.add_argument('--mlflow-experiment', type=str, default=None,
+                        help='MLflow experiment name for tracking')
 
     args = parser.parse_args()
 
@@ -275,6 +332,44 @@ Supported hyperparameters in the config:
         print(json.dumps(template, indent=4))
         return
 
+    # Auto hardware detection
+    num_gpus = 8
+    if args.auto or args.num_gpus == 'auto':
+        from fcm_quadrature.utils.hardware import detect_hardware, auto_configure_training
+        hw = detect_hardware()
+        hw_config = auto_configure_training(hw)
+        num_gpus = hw_config['num_gpus']
+        if args.max_parallel is None:
+            args.max_parallel = hw_config['max_parallel']
+        args.threads_per_job = hw_config['threads_per_job']
+        args.cpu_only = hw_config['cpu_only']
+        print(f"Auto-detected: {hw_config['summary']}")
+    else:
+        try:
+            num_gpus = int(args.num_gpus)
+        except ValueError:
+            print(f"ERROR: --num-gpus must be an integer or 'auto', got '{args.num_gpus}'")
+            sys.exit(1)
+
+    # Sweep mode
+    if args.sweep:
+        if not os.path.exists(args.train_data):
+            print(f"ERROR: Training data not found: {args.train_data}")
+            sys.exit(1)
+        if not os.path.exists(args.valid_data):
+            print(f"ERROR: Validation data not found: {args.valid_data}")
+            sys.exit(1)
+
+        run_sweep(
+            args.sweep, args.train_data, args.valid_data, args.output_dir,
+            num_gpus=num_gpus,
+            max_parallel=args.max_parallel,
+            threads_per_job=args.threads_per_job,
+            cpu_only=args.cpu_only,
+        )
+        return
+
+    # Standard config mode
     if not args.config:
         parser.print_help()
         sys.exit(1)
@@ -283,7 +378,6 @@ Supported hyperparameters in the config:
     with open(args.config, 'r') as f:
         raw = json.load(f)
 
-    # Normalize to a list
     if isinstance(raw, dict):
         configs = [raw]
     elif isinstance(raw, list):
@@ -292,11 +386,19 @@ Supported hyperparameters in the config:
         print("ERROR: Config must be a JSON object or array")
         sys.exit(1)
 
+    # Apply CLI overrides
+    if args.seed is not None:
+        for c in configs:
+            c['seed'] = args.seed
+    if args.mlflow_experiment:
+        for c in configs:
+            c['mlflow_experiment_name'] = args.mlflow_experiment
+
     print(f"Loaded {len(configs)} model config(s) from {args.config}")
 
     # Dry run
     if args.dry_run:
-        dry_run(configs, cpu_only=args.cpu_only, num_gpus=args.num_gpus)
+        dry_run(configs, cpu_only=args.cpu_only, num_gpus=num_gpus)
         return
 
     # Check data files
@@ -314,10 +416,11 @@ Supported hyperparameters in the config:
     else:
         train_parallel(
             configs, args.train_data, args.valid_data, args.output_dir,
-            num_gpus=args.num_gpus,
+            num_gpus=num_gpus,
             max_parallel=args.max_parallel,
             threads_per_job=args.threads_per_job,
             cpu_only=args.cpu_only,
+            mlflow_experiment=args.mlflow_experiment,
         )
 
 

@@ -1,0 +1,22 @@
+{
+    "sweep_type": "grid",
+    "base_config": {
+        "num_epochs": 3000,
+        "batch_size_train": 8192,
+        "batch_size_valid": 65536,
+        "loss_type": "combined",
+        "loss_alpha": 1.0,
+        "loss_beta": 0.5,
+        "early_stopping_patience": 500,
+        "num_inputs": 12,
+        "num_outputs": 4,
+        "seed": 42
+    },
+    "param_space": {
+        "model_width": [128, 256, 512],
+        "model_depth": [3, 4, 5],
+        "learning_rate": [1e-4, 1e-3, 5e-3],
+        "activation": ["relu", "gelu"],
+        "dropout_rate": [0.0, 0.1]
+    }
+}

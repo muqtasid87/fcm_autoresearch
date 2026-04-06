@@ -19,6 +19,8 @@ import pickle
 from pathlib import Path
 
 from fcm_quadrature.training.losses import create_loss
+from fcm_quadrature.utils.reproducibility import set_global_seeds, capture_environment, save_manifest
+from fcm_quadrature.utils import tracking
 
 # Set TensorFlow logging level before importing
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -113,6 +115,10 @@ def train_model(config, data_paths, output_dir, gpu_id=None, num_threads=4, verb
     dict
         Results dictionary
     """
+    # Set seeds for reproducibility
+    seed = config.get('seed', 42)
+    set_global_seeds(seed)
+
     # Setup TensorFlow with GPU
     tf = setup_tensorflow(gpu_id, num_threads)
 
@@ -135,6 +141,21 @@ def train_model(config, data_paths, output_dir, gpu_id=None, num_threads=4, verb
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=4)
 
+    # Capture environment for reproducibility manifest
+    env_info = capture_environment()
+
+    # Start MLflow tracking (if available and experiment name is configured)
+    mlflow_experiment = config.get('mlflow_experiment_name')
+    mlflow_run = None
+    if mlflow_experiment:
+        mlflow_run = tracking.start_run(
+            experiment_name=mlflow_experiment,
+            run_name=model_name,
+            tags={'gpu_id': str(gpu_id)}
+        )
+        tracking.log_config(config)
+        tracking.log_environment(env_info)
+
     # Load and preprocess data
     data = preprocessData(
         data_paths['train'],
@@ -142,6 +163,7 @@ def train_model(config, data_paths, output_dir, gpu_id=None, num_threads=4, verb
         testSetPath=None,
         dtype=np.float32,
         num_outputs=config.get('num_outputs', 4),
+        num_inputs=config.get('num_inputs', 12),
     )
 
     XTrain, yTrain, XValid, yValid = data
@@ -245,6 +267,12 @@ def train_model(config, data_paths, output_dir, gpu_id=None, num_threads=4, verb
         verbose=0
     )
 
+    # MLflow callback (logs per-epoch metrics)
+    mlflow_cb = tracking.create_keras_callback(log_interval=1)
+    all_callbacks = [lambda_cb, checkpoint_cb, early_stop_cb]
+    if mlflow_cb is not None and mlflow_run is not None:
+        all_callbacks.append(mlflow_cb)
+
     # Train
     train_start = time.time()
 
@@ -253,7 +281,7 @@ def train_model(config, data_paths, output_dir, gpu_id=None, num_threads=4, verb
         validation_data=validSet,
         epochs=config['num_epochs'],
         verbose=verbose,
-        callbacks=[lambda_cb, checkpoint_cb, early_stop_cb]
+        callbacks=all_callbacks
     )
 
     train_time = time.time() - train_start
@@ -379,6 +407,25 @@ def train_model(config, data_paths, output_dir, gpu_id=None, num_threads=4, verb
     results_path = os.path.join(output_dir, 'results.json')
     with open(results_path, 'w') as f:
         json.dump(results, f, indent=4)
+
+    # Save reproducibility manifest
+    save_manifest(output_dir, config, env_info)
+
+    # Log final metrics and artifacts to MLflow
+    if mlflow_run is not None:
+        tracking.log_metrics({
+            'best_val_loss': float(best_val_loss),
+            'mean_abs_rel_error': mean_abs_rel_error,
+            'median_abs_rel_error': median_abs_rel_error,
+            'training_time_seconds': train_time,
+            'actual_epochs': actual_epochs,
+        })
+        tracking.log_artifact(results_path)
+        tracking.log_artifact(config_path)
+        loss_curve_path = os.path.join(output_dir, 'loss_curve.png')
+        if os.path.exists(loss_curve_path):
+            tracking.log_artifact(loss_curve_path)
+        tracking.end_run()
 
     # Clean up
     del model

@@ -92,7 +92,8 @@ class ParallelGPUHyperparameterSearch:
     """
 
     def __init__(self, output_dir='gpu_search', num_gpus=8,
-                 max_parallel=30, threads_per_job=3, cpu_only=False):
+                 max_parallel=30, threads_per_job=3, cpu_only=False,
+                 mlflow_experiment_name=None):
         """
         Parameters
         ----------
@@ -106,11 +107,14 @@ class ParallelGPUHyperparameterSearch:
             CPU threads per job for data pipeline
         cpu_only : bool
             If True, train on CPU only (no GPU)
+        mlflow_experiment_name : str, optional
+            MLflow experiment name. If set, each worker logs to this experiment.
         """
         self.num_gpus = num_gpus
         self.max_parallel = max_parallel
         self.threads_per_job = threads_per_job
         self.cpu_only = cpu_only
+        self.mlflow_experiment_name = mlflow_experiment_name
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.output_dir = os.path.join(output_dir, f'search_{timestamp}')
@@ -121,6 +125,8 @@ class ParallelGPUHyperparameterSearch:
         self._monitor_thread = None
 
         mode = "CPU-ONLY" if cpu_only else "GPU"
+        if mlflow_experiment_name:
+            print(f"  MLflow experiment : {mlflow_experiment_name}")
         print("=" * 70)
         print(f"  PARALLEL {mode} HYPERPARAMETER SEARCH")
         print("=" * 70)
@@ -134,6 +140,34 @@ class ParallelGPUHyperparameterSearch:
         print(f"  Total CPU threads: {max_parallel * threads_per_job}")
         print(f"  Available CPUs   : {os.cpu_count() or '?'}")
         print("=" * 70)
+
+    @classmethod
+    def auto_configured(cls, output_dir='gpu_search', num_models=1, **kwargs):
+        """Create an instance with auto-detected hardware settings.
+
+        Parameters
+        ----------
+        output_dir : str
+            Base output directory.
+        num_models : int
+            Number of models to be trained (affects parallelism).
+        **kwargs
+            Additional kwargs passed to __init__ (overrides auto settings).
+        """
+        from fcm_quadrature.utils.hardware import detect_hardware, auto_configure_training
+
+        hw = detect_hardware()
+        config = auto_configure_training(hw, num_models=num_models)
+
+        init_args = {
+            'output_dir': output_dir,
+            'num_gpus': config['num_gpus'],
+            'max_parallel': config['max_parallel'],
+            'threads_per_job': config['threads_per_job'],
+            'cpu_only': config['cpu_only'],
+        }
+        init_args.update(kwargs)
+        return cls(**init_args)
 
     def _read_all_progress(self):
         """Read progress from all model directories."""
@@ -257,8 +291,11 @@ class ParallelGPUHyperparameterSearch:
         failed = 0
 
         # Assign GPUs round-robin, or None for CPU-only
+        # Inject mlflow_experiment_name into each config if set
         job_args = []
         for idx, config in enumerate(configs):
+            if self.mlflow_experiment_name and 'mlflow_experiment_name' not in config:
+                config['mlflow_experiment_name'] = self.mlflow_experiment_name
             gpu_id = None if self.cpu_only else (idx % self.num_gpus)
             job_args.append((
                 config, idx, self.output_dir, data_paths,

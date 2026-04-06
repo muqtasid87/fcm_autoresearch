@@ -17,6 +17,8 @@ dependencies = [
 
 [project.optional-dependencies]
 tracking = ["mlflow"]
+sweeps = ["optuna"]
+all = ["mlflow", "optuna"]
 
 [build-system]
 requires = ["setuptools>=68.0"]

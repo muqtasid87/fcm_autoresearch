@@ -1,0 +1,23 @@
+{
+    "sweep_type": "random",
+    "n_trials": 30,
+    "seed": 42,
+    "base_config": {
+        "num_epochs": 3000,
+        "batch_size_train": 8192,
+        "batch_size_valid": 65536,
+        "loss_type": "combined",
+        "early_stopping_patience": 500,
+        "num_inputs": 12,
+        "num_outputs": 4,
+        "seed": 42
+    },
+    "param_space": {
+        "model_width": [128, 192, 256, 384, 512],
+        "model_depth": [3, 4, 5, 6],
+        "learning_rate": {"type": "log_uniform", "low": 1e-5, "high": 1e-2},
+        "activation": ["relu", "gelu", "swish"],
+        "dropout_rate": {"type": "uniform", "low": 0.0, "high": 0.3},
+        "weight_initializer": ["glorot_uniform", "he_normal"]
+    }
+}

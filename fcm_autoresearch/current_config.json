@@ -1,0 +1,15 @@
+{
+  "num_distances": 12,
+  "target_spacing": "log",
+  "cut_type": "both",
+  "include_arc_features": false,
+  "num_samples": 50000,
+  "model_type": "fnn",
+  "model_width": 256,
+  "model_depth": 4,
+  "learning_rate": 1e-3,
+  "activation": "relu",
+  "dropout_rate": 0.1,
+  "num_epochs": 500,
+  "early_stopping_patience": 50
+}
