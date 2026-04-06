@@ -112,10 +112,15 @@ pip install --ignore-installed . -q
 # Create working directories
 mkdir -p fcm_autoresearch/data fcm_autoresearch/runs experiments mlruns
 
+# Install Claude Code CLI
+echo "Installing Claude Code CLI..."
+curl -sL https://dist.claude.ai/linux-x64/latest | tar xz -C /usr/local/bin/ 2>/dev/null || echo "  (claude CLI install skipped)"
+
 echo ""
 echo "=== Remote setup complete ==="
 echo "Python: $(python3 --version)"
 echo "Packages installed: $(pip show mlflow 2>/dev/null | grep Version || echo 'mlflow not found')"
+echo "Claude Code: $(which claude && echo 'installed' || echo 'not found — install manually if needed')"
 echo "Working dir: $(pwd)"
 REMOTE_SCRIPT
 
