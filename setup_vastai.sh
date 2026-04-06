@@ -106,7 +106,8 @@ fi
 
 # Install Python package
 echo "Installing Python package..."
-pip install -e ".[tracking]" -q
+pip install --upgrade pip -q
+pip install ".[tracking]" -q
 
 # Create working directories
 mkdir -p fcm_autoresearch/data fcm_autoresearch/runs experiments mlruns
