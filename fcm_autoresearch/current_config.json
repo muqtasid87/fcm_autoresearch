@@ -1,6 +1,6 @@
 {
   "num_distances": 12,
-  "target_spacing": "log",
+  "target_spacing": "even",
   "cut_type": "both",
   "include_arc_features": false,
   "num_samples": 50000,
