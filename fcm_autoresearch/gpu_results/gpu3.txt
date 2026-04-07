@@ -1,0 +1,7 @@
+VAL_LOSS=9.01019957382232e-05
+TRIAL_DIR=/root/fcm/fcm_autoresearch/runs/1775519492_gpu3
+LABEL=w256_d3_gelu_nodrop_lr3e4
+CONFIG=fcm_autoresearch/config_gpu3.json
+NUM_DISTANCES=12
+TARGET_SPACING=even
+INCLUDE_ARC=false

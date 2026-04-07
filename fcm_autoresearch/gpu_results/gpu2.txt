@@ -1,0 +1,7 @@
+VAL_LOSS=4.885646944785549e-07
+TRIAL_DIR=/root/fcm/fcm_autoresearch/runs/1775522778_gpu2
+LABEL=w256d4gelu_10k
+CONFIG=fcm_autoresearch/config_gpu2.json
+NUM_DISTANCES=12
+TARGET_SPACING=even
+INCLUDE_ARC=false

@@ -1,14 +1,19 @@
-# Data and results (synced via rsync, not git)
-data/
-experiments/
-mlruns/
+# Raw generated data (6.4 GB, impractical for git)
 Data/
 
-# Python
+# MLflow tracking (not needed)
+mlruns/
+experiments/
+
+# Python venv / build artifacts
 .venv/
+venv/
+env/
 __pycache__/
 *.pyc
+*.pyo
 *.egg-info/
+*.egg
 
 # Config with secrets
 sync.conf
@@ -18,25 +23,14 @@ sync.conf
 log.txt
 temp/
 
-# IDE / tool
+# IDE / tool state
 .claude/
 .vscode/
+.ipynb_checkpoints/
 
 # Old source dirs (kept for reference, not tracked)
 NNTrain/
 src_moment_fitting/
-runs/
 gui.py
 .archive_scripts/
 .self_code_sanity_check/
-.ipynb_checkpoints/
-
-# Binary / large files
-*.h5
-*.npy
-*.pickle
-*.keras
-*.csv
-*.png
-*.jpg
-*.ipynb

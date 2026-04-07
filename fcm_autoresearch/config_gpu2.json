@@ -1,0 +1,19 @@
+{
+  "num_distances": 12,
+  "target_spacing": "even",
+  "cut_type": "both",
+  "include_arc_features": false,
+  "num_samples": 50000,
+  "model_type": "fnn",
+  "model_width": 512,
+  "model_depth": 5,
+  "learning_rate": 1e-3,
+  "activation": "relu",
+  "dropout_rate": 0.0,
+  "weight_initializer": "he_normal",
+  "loss_type": "mse",
+  "batch_size_train": 16384,
+  "batch_size_valid": 65536,
+  "num_epochs": 10000,
+  "early_stopping_patience": 500
+}

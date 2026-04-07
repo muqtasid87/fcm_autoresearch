@@ -1,0 +1,23 @@
+{
+    "model_width": 256,
+    "model_depth": 4,
+    "activation": "gelu",
+    "weight_initializer": "glorot_uniform",
+    "learning_rate": 0.001,
+    "batch_size_train": 8192,
+    "batch_size_valid": 65536,
+    "num_epochs": 500,
+    "early_stopping_patience": 50,
+    "loss_type": "combined",
+    "loss_alpha": 1.0,
+    "loss_beta": 0.5,
+    "dropout_rate": 0.0,
+    "num_inputs": 12,
+    "num_outputs": 4,
+    "use_normalization": false,
+    "gradient_clip_norm": 1.0,
+    "seed": 42,
+    "model_type": "fnn",
+    "mlflow_experiment_name": "fcm_autoresearch",
+    "model_name": "w256_d4_lr1e-03_bs8192_gelu_combined"
+}

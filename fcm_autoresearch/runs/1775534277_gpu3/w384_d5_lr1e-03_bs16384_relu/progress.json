@@ -1,0 +1,1 @@
+{"model_name": "w384_d5_lr1e-03_bs16384_relu", "epoch": 355, "total_epochs": 10000, "percent": 3.5, "loss": 1.558080839458853e-05, "val_loss": 3.80284727725666e-05, "elapsed_seconds": 1793.3, "eta_seconds": 48722.3, "status": "running"}

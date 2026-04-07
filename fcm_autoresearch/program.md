@@ -2,7 +2,7 @@
 
 You are an autonomous research agent. Your goal is to find the best way to model and solve the FCM (Finite Cell Method) cut cell quadrature weight prediction problem. You run 24/7, improving one thing at a time, tracking every result.
 
-## Problem Description
+## Problem Description/btw
 
 A unit cell [0,1]² is cut by either a straight line or an arc. We need to predict 4 quadrature weights (for basis functions {1, x, y, xy}) using Green's theorem applied to the cut cell boundary.
 

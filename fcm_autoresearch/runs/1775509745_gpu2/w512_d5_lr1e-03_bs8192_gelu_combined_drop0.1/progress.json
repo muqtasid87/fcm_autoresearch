@@ -1,0 +1,1 @@
+{"model_name": "w512_d5_lr1e-03_bs8192_gelu_combined_drop0.1", "epoch": 200, "total_epochs": 500, "percent": 100, "loss": 0.002613489283248782, "val_loss": 0.0003000016149599105, "elapsed_seconds": 2904.4, "eta_seconds": 0, "status": "complete", "stopped_early": true, "gpu_id": null}

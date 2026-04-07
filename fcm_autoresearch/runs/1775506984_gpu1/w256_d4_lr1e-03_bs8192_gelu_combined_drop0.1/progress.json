@@ -1,0 +1,1 @@
+{"model_name": "w256_d4_lr1e-03_bs8192_gelu_combined_drop0.1", "epoch": 301, "total_epochs": 500, "percent": 100, "loss": 0.003793712705373764, "val_loss": 0.0003862877783831209, "elapsed_seconds": 1359.5, "eta_seconds": 0, "status": "complete", "stopped_early": true, "gpu_id": null}

@@ -1,0 +1,13 @@
+{
+  "model_type": "fnn",
+  "model_width": 256,
+  "model_depth": 3,
+  "learning_rate": 0.0003,
+  "activation": "gelu",
+  "dropout_rate": 0.0,
+  "num_epochs": 500,
+  "early_stopping_patience": 50,
+  "num_inputs": 12,
+  "num_outputs": 4,
+  "mlflow_experiment_name": "fcm_autoresearch"
+}

@@ -1,0 +1,7 @@
+VAL_LOSS=0.00036597097641788423
+TRIAL_DIR=/root/fcm/fcm_autoresearch/runs/1775505811_gpu0
+LABEL=8_even
+CONFIG=fcm_autoresearch/config_gpu0.json
+NUM_DISTANCES=8
+TARGET_SPACING=even
+INCLUDE_ARC=false

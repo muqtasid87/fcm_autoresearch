@@ -1,0 +1,1 @@
+{"model_name": "w256_d5_lr1e-03_bs16384_relu", "epoch": 2994, "total_epochs": 10000, "percent": 100, "loss": 6.769240030735091e-07, "val_loss": 2.597881234578381e-07, "elapsed_seconds": 7937.3, "eta_seconds": 0, "status": "complete", "stopped_early": true, "gpu_id": null}

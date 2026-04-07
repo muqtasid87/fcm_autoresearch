@@ -1,0 +1,1 @@
+{"model_name": "w256_d5_lr1e-03_bs16384_gelu", "epoch": 1782, "total_epochs": 10000, "percent": 17.8, "loss": 2.243530616397038e-06, "val_loss": 2.2454494228441035e-06, "elapsed_seconds": 8207.1, "eta_seconds": 37848.6, "status": "running"}

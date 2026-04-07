@@ -1,0 +1,23 @@
+{
+    "model_width": 256,
+    "model_depth": 5,
+    "activation": "relu",
+    "weight_initializer": "he_normal",
+    "learning_rate": 0.001,
+    "batch_size_train": 16384,
+    "batch_size_valid": 65536,
+    "num_epochs": 10000,
+    "early_stopping_patience": 500,
+    "loss_type": "mse",
+    "loss_alpha": 1.0,
+    "loss_beta": 0.5,
+    "dropout_rate": 0.0,
+    "num_inputs": 12,
+    "num_outputs": 4,
+    "use_normalization": false,
+    "gradient_clip_norm": 1.0,
+    "seed": 42,
+    "model_type": "fnn",
+    "mlflow_experiment_name": "fcm_autoresearch",
+    "model_name": "w256_d5_lr1e-03_bs16384_relu"
+}
