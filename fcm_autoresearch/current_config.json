@@ -6,7 +6,7 @@
   "num_samples": 50000,
   "model_type": "fnn",
   "model_width": 256,
-  "model_depth": 3,
+  "model_depth": 4,
   "learning_rate": 1e-3,
   "activation": "gelu",
   "dropout_rate": 0.0,
