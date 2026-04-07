@@ -1,1 +1,25 @@
 timestamp	num_distances	spacing	arc_features	model_type	width	depth	lr	activation	dropout	val_loss	delta_pct	status	notes
+2026-04-06T17:40:01	12	log	false	fnn	256	4	1e-3	relu	0.1	0.0003838	0.0	KEEP	Baseline: 12 log-spaced distances, width=256 depth=4 relu
+2026-04-06T18:11:14	8	even	false	fnn	256	4	1e-3	relu	0.1	nan	nan	REVERT	8 even-spaced: training diverged (NaN loss), likely too few inputs or data issue
+2026-04-06T18:43:19	12	even	false	fnn	256	4	1e-3	relu	0.1	0.0002412	-37.2	KEEP	12 even-spaced: uniform spacing dramatically beats log-spacing (37% improvement)
+2026-04-06T18:43:19	20	log	false	fnn	256	4	1e-3	relu	0.1	0.0004263	+11.1	REVERT	20 log-spaced: more distances with log-spacing worse than baseline
+2026-04-06T18:43:19	20	even	false	fnn	256	4	1e-3	relu	0.1	0.0004662	+21.5	REVERT	20 even-spaced: more distances uniform, still worse than 12 even
+2026-04-06T18:43:19	16	even	false	fnn	256	4	1e-3	relu	0.1	0.0004328	+12.8	REVERT	16 even-spaced: intermediate count, worse than 12 even
+2026-04-06T20:22:22	8	even	false	fnn	256	4	1e-3	relu	0.1	0.0003660	+51.8	REVERT	8 even-spaced: better than log-baseline but worse than 12 even (51.8% off best)
+2026-04-06T20:22:22	12	even	true	fnn	256	4	1e-3	relu	0.1	0.0003664	+51.9	REVERT	12 even + arc features: no benefit from radius/direction info (+51.9% vs best)
+2026-04-06T20:22:22	28	even	false	fnn	256	4	1e-3	relu	0.1	0.0004138	+71.6	REVERT	28 even-spaced: more distances hurt, 12 is sweet spot
+2026-04-06T20:22:22	4	even	false	fnn	256	4	1e-3	relu	0.1	0.0004815	+99.6	REVERT	4 even-spaced: too few distances, worst result
+2026-04-06T21:08:09	12	even	false	fnn	256	4	1e-3	gelu	0.1	0.0001398	-42.1	KEEP	gelu activation: 42% better than relu — smooth activation matches problem structure
+2026-04-06T21:08:09	12	even	false	fnn	512	4	1e-3	relu	0.1	0.0001247	-48.3	KEEP	width=512: 48% better than w256 baseline — more capacity helps
+2026-04-06T21:08:09	12	even	false	fnn	256	5	1e-3	relu	0.1	0.0008109	+236.2	REVERT	depth=5 with relu: much worse — too deep for this problem with relu
+2026-04-06T22:08:02	12	even	false	fnn	512	4	1e-3	gelu	0.1	0.0001390	+11.5	REVERT	w512+gelu: gelu helps but width still not bottleneck at depth=4
+2026-04-06T22:08:02	12	even	false	fnn	512	5	1e-3	gelu	0.1	0.0001300	+4.2	REVERT	w512+d5+gelu: larger model with gelu, still worse than w256+d3+gelu
+2026-04-06T22:08:02	12	even	false	fnn	256	3	1e-3	gelu	0.1	0.0000941	-24.7	KEEP	w256+d3+gelu: 25% improvement — shallower depth=3 with gelu is optimal
+2026-04-06T23:50:38	12	even	false	fnn	512	3	1e-3	gelu	0.1	0.0000738	-21.5	REVERT	w512+d3+gelu: wider helps but still has dropout=0.1, worse than no-dropout
+2026-04-06T23:50:38	12	even	false	fnn	256	2	1e-3	gelu	0.1	0.0001976	+109.8	REVERT	w256+d2+gelu: too shallow (depth=2), worse
+2026-04-06T23:50:38	12	even	false	fnn	256	3	1e-3	gelu	0.0	0.0000382	-59.4	KEEP	w256+d3+gelu+drop=0: removing dropout key insight, 59% improvement
+2026-04-07T00:44:23	12	even	false	fnn	512	3	1e-3	gelu	0.0	0.0000711	-24.5	REVERT	w512+d3+gelu+nodrop: wider not better than w256+d4
+2026-04-07T00:44:23	12	even	false	fnn	256	4	1e-3	gelu	0.0	0.0000210	-45.0	KEEP	w256+d4+gelu+nodrop: 45% better — depth=4 optimal without dropout
+2026-04-07T00:44:23	12	even	false	fnn	256	3	3e-4	gelu	0.0	0.0000901	+135.6	REVERT	lower lr=3e-4 with d3: converges slower, worse in 500 epochs
+2026-04-07T03:10:25	12	even	false	fnn	256	5	1e-3	relu	0.0	1.527e-07	-99.3	KEEP	ref config+10Kep: w256d5relu+mse+he_normal, 10K epochs — matches reference result
+2026-04-07T03:10:25	12	even	false	fnn	256	4	1e-3	gelu	0.0	4.886e-07	+220.0	REVERT	w256d4gelu+mse+10Kep: good but relu+d5 3x better

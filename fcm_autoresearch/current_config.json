@@ -6,10 +6,14 @@
   "num_samples": 50000,
   "model_type": "fnn",
   "model_width": 256,
-  "model_depth": 4,
+  "model_depth": 5,
   "learning_rate": 1e-3,
-  "activation": "gelu",
+  "activation": "relu",
+  "weight_initializer": "he_normal",
+  "loss_type": "mse",
+  "batch_size_train": 16384,
+  "batch_size_valid": 65536,
   "dropout_rate": 0.0,
-  "num_epochs": 500,
-  "early_stopping_patience": 50
+  "num_epochs": 10000,
+  "early_stopping_patience": 500
 }
